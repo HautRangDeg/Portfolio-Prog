@@ -1,0 +1,91 @@
+/* TP n°4 du MOOC "Fabriquer un objet connecté"
+Ce dernier TP est centré autour de Processing, qu'on utilise ici. Après avoir vu comment récupérer 
+des données formatées en JSON sur le web (ici envoyées par des ESP32), on va décliner ici leur interprétation graphique.
+
+Puisque pour les besoins du TP on n'utilise pas un vrai JSON variable, il faudrait changer manuellement l'URL, pour tester les deux modes d'affichage.
+Or, Processing est assez puissant et permet des intéractions avec son clavier par exemple.
+Donc ici, la personne qui aura la gentillesse de me relire, n'aura pas à s'embêter à reprendre le code, il lui suffira d'appuyer sur n'importe quelle touche de son clavier pour tester les deux modes d'affichage
+(une pression sur le clavier = une commutation du mode d'affichage).
+
+On verra également que Processing peut faire de l'animation.
+*/
+
+//début du code:
+
+// définition de la palette de couleur (pour éviter de retenir tous les codes couleur)
+int noir = 0;
+int blanc = 255;
+int vert = #8ae234;
+int rouge = #ef2929;
+
+// définition d'une variable pour l'URL
+String valeurURL="good"; //on commencera donc le programme avec l'URL "http://api.jimbo.wtf/luftdaten/good" (cf.infra)
+
+// une petite surprise
+int size = 20; //indice : cela concerne l'animation
+
+// dans le setup on définit quelques fonctions de base
+void setup(){
+  size(400, 300, P3D); // les deux premiers champs servent à déterminer la taille de l'espace utilisé. Le paramètre P3D permet à Processing d'utiliser un rendu 3D (https://processing.org/tutorials/p3d/). Ce sera nécessaire pour animer le texte.
+    noStroke(); // ici j'enlève les contours des formes ( en l'occurence les ellipses) qui seront dessinées (surtout avec un rendu 3D couplé à une requête internet qui entraine une perte de résolution graphique : vous pouvez tester en enlevant cette ligne)
+}
+
+
+void draw(){
+  background(blanc); // je définis ici la couleur de fond
+  
+  // on déclare une variable String qui viendra stocker l'url de la ressource à atteindre
+String url = "http://api.jimbo.wtf/luftdaten/"+valeurURL ;//String url stocke donc une URL qui variera en fonction de valeurURL (rappel, on commence avec "good", notamment pour les besoins de la fonction GET)
+  // on analyse le fichier JSON reçu
+JSONObject json = loadJSONObject(url); 
+// on extrait l'élément JSON appelé "pm2.5"
+float pm = json.getFloat("pm2.5");
+
+//si la qualité de l'air est inférieure à 25
+if(pm < 25){ //c'est donc la variable pm, qui correspond à la donnée "pm2.5" du JSON (cf. supra), qu'on compare à l'entier 25
+  fill(vert); // la forme qui suit sera de couleur verte
+  ellipse (110, 137, 40, 40);//un objet rond est dessiné. Les deux premières coordonnées définissent la position du centre de ce rond (par rapport au point d'origine situé en haut à gauche). Les deux derniers champs définissent le rayon (en hauteur et en largeur, pour dessiner des ellipses...)
+  fill(blanc); // mon prochain objet sera blanc
+  text(pm, 89, 140);// il s'agit d'un texte que j'ajoute au centre du rond vert précédent, qui affichera la données de "pm2.5" (le message affiché sera donc = pm). Les deux entiers suivants définissent la position du texte : 89 pixels à droite, 140 pixels en bas.
+  fill(noir); // le prochain objet sera noir
+  textSize(12); // il s'agit d'un texte dont je définis ici la taille (nécessaire en mode 3D, sinon facultatif)
+  text("La qualité de l'air est bonne", 140, 140);}// j'écris le texte demandé, en le positionnant selon les deux derniers entiers entre parenthèses.
+  
+  
+//si la qualité de l'air est supérieur à 25  
+if(pm >= 25){//même principe que précédemment, on utilise la variable pm pour comparer à notre seuil de tolérance au particules fines qui est de 25
+  fill(rouge); // le prochain objet sera rouge
+  ellipse (100, 140, 40+(pm/2), 40+(pm/2)); //ici je change un peu la définition du cercle, c'est à dire que je fais évoluer la taille de son rayon en fonction du niveau de particules avec la formule 40[taille minimum du cercle]+(pm/2)[augmentation du rayon selon un ratio de pm divisé par 2 (pour pas que le rayon soit trop grand)].
+  
+  fill(noir); //mon prochain texte sera noir
+  textSize(size); //c'est ici qu'on rentre dans l'animation. En l'occurence c'est la taille du texte suivant qu'on va faire varier selon size.
+  text("Alerte particules fines", 145, 145, -size + size * sin(radians(frameCount*10))); //ici je définis le texte, sa position (145 et 145), puis son évolution grâce au rendu 3D. Alors je vous rassure, la formule n'est pas de moi, elle vient d'ici : https://forum.processing.org/two/discussion/11806/text-scale-animation (cf. le très court code de la 1ere réponse)
+
+}
+}
+
+
+// c'est ici qu'on facilite le test grâce à la fonction keyPressed() : https://processing.org/reference/keyPressed_.html
+void keyPressed() {
+  if (valeurURL == "good") {//si la valeur de l'URL fini par "good"
+    valeurURL = "bad";//alors on permute à "bad" lorsqu'on appuie sur le clavier. C'est pour ça qu'il est important de commencer ce programme avec une valeur de base définie (que j'ai choisi ="good"). C'est également nécessaire pour la fonction GET.
+  } 
+  else {
+    valeurURL = "good"; //dans tous les autres cas, c'est à dire quand valeurULR="bad", on permute sur "good".
+  }
+
+
+  delay(1000);
+}
+
+/*
+Commentaire technique : je précise qu'appuyer sur une touche du clavier ne permute pas les modes d'affichages, il permute l'URL qui est requêtée. L'affichage change donc en fonction du JSON de cette dernière.
+
+Commentaire : j'avoue être resté sur ma fin avec ce dernier TP qui consistait simplement à faire de la mise en page graphique. Alors pour combler ma frustration, j'en ai profité pour découvrir Processing.
+Et j'avoue m'être bien amusé. C'est finalement un outil de visualisation assez puissant.
+Je vous recommande les liens suivants :
+https://fr.flossmanuals.net/processing/lanimation-dun-objet/
+ou encore le code de la 1ere réponse du lien suivant https://forum.processing.org/two/discussion/comment/80145/#Comment_80145 (qui montre qu'on peut aussi intéragir avec la souris).
+
+Bonne fin de MOOC
+*/

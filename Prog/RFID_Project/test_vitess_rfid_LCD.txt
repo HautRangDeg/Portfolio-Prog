@@ -1,0 +1,289 @@
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(PC13, PC14,PC15,PA0,PA1,PA2);
+
+#include <SPI.h>
+#define PIN_SPI_SS              PA4
+#define PIN_SPI_MOSI            PA7
+#define PIN_SPI_MISO            PA6
+#define PIN_SPI_SCK             PA5
+const int SSPin = PA4;   // Slave Select pin
+const int IRQPin = PA9;   // Sends wake-up pulse
+byte TXBuffer[40];      // Rransmit buffer
+byte RXBuffer[40];      // Receive buffer
+byte NFCReady = 0;      // Used to track NFC state
+byte Data = 0;          // Keep track of memory we read from   
+char Data_Eeprom[12];
+int  Display=0;
+
+void setup() {
+  lcd.begin(16,2);
+  lcd.setCursor(8,0);
+lcd.print("1");
+delay(1000);
+lcd.clear();
+delay(300);
+lcd.setCursor(8,0);
+lcd.print("2");
+delay(700);
+lcd.clear();
+delay(300);
+lcd.setCursor(8,0);
+lcd.print("3");
+delay(700);
+lcd.clear();
+delay(300);
+lcd.setCursor(5,0);
+lcd.print("GO !!!");
+delay(500);
+lcd.clear();
+pinMode(PB1, OUTPUT);
+pinMode(PB0, OUTPUT);
+    pinMode(IRQPin, OUTPUT);
+    digitalWrite(IRQPin, HIGH); // Wake up pulse
+    pinMode(SSPin, OUTPUT);
+    digitalWrite(SSPin, HIGH);
+    SPI.begin();
+  SPI.beginTransaction(SPISettings(1500000, MSBFIRST, SPI_MODE3));
+
+
+     
+
+      // Send a wake up
+    digitalWrite(IRQPin, LOW);      // Pulse to put the 
+    delayMicroseconds(100);         // CR95HF Easy into SPI
+    digitalWrite(IRQPin, HIGH);     // Mode 
+    delay(10);
+             
+
+
+ digitalWrite(SSPin, LOW);
+    SPI.transfer (0x00); //commande
+    SPI.transfer (0x02); //protocole
+    SPI.transfer (0x02); //longueur
+    SPI.transfer(0x02); //norme
+    SPI.transfer(0x00); //vitesse de transmission
+    digitalWrite(SSPin, HIGH);
+    delay(1);
+    digitalWrite(SSPin, LOW);
+  while(RXBuffer[0] != 8)
+    {
+    RXBuffer[0] = SPI.transfer(0x03);  // Write 3 until
+    RXBuffer[0] = RXBuffer[0] & 0x08;  // Bit 3 is set
+    }
+  digitalWrite(SSPin, HIGH);
+  delay(1);
+   digitalWrite(SSPin, LOW);
+  SPI.transfer(0x02);             // SPI control byte for read         
+  RXBuffer[0] = SPI.transfer(0);  // Response code
+  RXBuffer[1] = SPI.transfer(0); 
+  digitalWrite(SSPin, HIGH);
+  delay(1);
+  
+    //GAIN
+     digitalWrite(SSPin, LOW);
+    SPI.transfer (0x00); //commande
+    SPI.transfer (0x09); //GAIN
+    SPI.transfer (0x04); //longueur
+    SPI.transfer(0x68); //norme
+    SPI.transfer(0x01);
+    SPI.transfer(0x01);
+    SPI.transfer(0xD1);//95% 34dB
+    digitalWrite(SSPin, HIGH);
+    delay(1);
+    digitalWrite(SSPin, LOW);
+  while(RXBuffer[0] != 8)
+    {
+    RXBuffer[0] = SPI.transfer(0x03);  // Write 3 until
+    RXBuffer[0] = RXBuffer[0] & 0x08;  // Bit 3 is set
+    }
+  digitalWrite(SSPin, HIGH);
+  delay(1);
+   digitalWrite(SSPin, LOW);
+  SPI.transfer(0x02);             // SPI control byte for read         
+  RXBuffer[0] = SPI.transfer(0);  // Response code
+  RXBuffer[1] = SPI.transfer(0); 
+  digitalWrite(SSPin, HIGH);
+  delay(1);
+    //TIMER
+      digitalWrite(SSPin, LOW);
+    SPI.transfer (0x00); //commande
+    SPI.transfer (0x09); //protocole
+    SPI.transfer (0x04); //longueur
+    SPI.transfer(0x3A); //norme
+    SPI.transfer(0x00);
+    SPI.transfer(0x58);
+    SPI.transfer(0x04);
+    digitalWrite(SSPin, HIGH);
+    delay(1);
+    digitalWrite(SSPin, LOW);
+  while(RXBuffer[0] != 8)
+    {
+    RXBuffer[0] = SPI.transfer(0x03);  // Write 3 until
+    RXBuffer[0] = RXBuffer[0] & 0x08;  // Bit 3 is set
+    }
+  digitalWrite(SSPin, HIGH);
+  delay(1);
+   digitalWrite(SSPin, LOW);
+  SPI.transfer(0x02);             // SPI control byte for read         
+  RXBuffer[0] = SPI.transfer(0);  // Response code
+  RXBuffer[1] = SPI.transfer(0); 
+  digitalWrite(SSPin, HIGH);
+  delay(1);
+
+}
+
+void loop (){
+    byte i = 0;
+   uint8_t a = 0;
+      uint8_t b = 0;
+         uint8_t c = 0;
+                uint8_t d = 0;
+                       uint8_t e = 0;
+                         uint8_t f = 0;
+lcd.setCursor(0, 1);
+  lcd.print("Tour : ");
+lcd.print(millis()/1000 -4);
+  lcd.print(":");
+  int dixieme = millis()/10;
+  lcd.println(dixieme % 100);
+
+  digitalWrite(SSPin, LOW);
+    a=SPI.transfer (0x00); //commande
+    b=SPI.transfer (0x04); //réception
+    c=SPI.transfer (0x02); //longueur
+    d=SPI.transfer (0x26);
+    e=SPI.transfer (0x07);
+    digitalWrite(SSPin, HIGH);
+    delay(1);
+
+ digitalWrite(SSPin, LOW);
+  while(RXBuffer[0] != 8)
+    {
+    RXBuffer[0] = SPI.transfer(0x03);  // Write 3 until
+    RXBuffer[0] = RXBuffer[0] & 0x08;  // Bit 3 is set
+    }
+  digitalWrite(SSPin, HIGH);
+  delay(1);
+
+  
+// step 3, read the data
+  digitalWrite(SSPin, LOW);
+  SPI.transfer(0x02);             // SPI control byte for read         
+  RXBuffer[0] = SPI.transfer(0);
+  RXBuffer[1] = SPI.transfer(0);
+   for (i=0;i<RXBuffer[1];i++)      
+    RXBuffer[i+2]=SPI.transfer(0); // Response code
+  digitalWrite(SSPin, HIGH);
+  delay(5);
+  if(RXBuffer[0]==128){
+    Serial.println(RXBuffer[0]);
+    Serial.println(RXBuffer[1]);
+    Serial.print(RXBuffer[2],HEX);
+    Serial.print(RXBuffer[3],HEX);
+    Serial.print(RXBuffer[4],HEX);
+    Serial.print(RXBuffer[5],HEX);
+        Serial.print(RXBuffer[6],HEX);
+            Serial.print(RXBuffer[7],HEX);
+                      Serial.print(RXBuffer[8],HEX);
+                                Serial.print(RXBuffer[9],HEX);
+                                          Serial.print(RXBuffer[10],HEX);
+                                                    Serial.print(RXBuffer[11],HEX);
+        Serial.println(RXBuffer[12],HEX);
+
+         digitalWrite(SSPin, LOW);
+    a=SPI.transfer (0x00); //commande
+    b=SPI.transfer (0x04); //réception
+   c=SPI.transfer (0x03); //longueur
+    d=SPI.transfer (0x93);
+    e=SPI.transfer (0x20);
+    SPI.transfer (0x08);
+
+    digitalWrite(SSPin, HIGH);
+    delay(1);
+    Serial.println(a+b+c+d+e+f);
+    delay(1);
+
+ digitalWrite(SSPin, LOW);
+  while(RXBuffer[0] != 8)
+    {
+    RXBuffer[0] = SPI.transfer(0x03);  // Write 3 until
+    RXBuffer[0] = RXBuffer[0] & 0x08;  // Bit 3 is set
+    }
+  digitalWrite(SSPin, HIGH);
+  delay(1);
+  Serial.print("poll :");
+  Serial.println(RXBuffer[0]);
+  delay(1);
+  
+// step 3, read the data
+  digitalWrite(SSPin, LOW);
+  SPI.transfer(0x02);             // SPI control byte for read         
+  RXBuffer[0] = SPI.transfer(0);
+  RXBuffer[1] = SPI.transfer(0);
+   for (i=0;i<RXBuffer[1];i++)      
+    RXBuffer[i+2]=SPI.transfer(0); // Response code
+  digitalWrite(SSPin, HIGH);
+  delay(5);
+  if(RXBuffer[2]== 245 && RXBuffer[3] == 143 && RXBuffer[4]== 139 && RXBuffer[5]==255 ){
+  digitalWrite(PB1, HIGH);
+  delay(10);
+  digitalWrite(PB1, LOW);
+  lcd.clear();
+  lcd.setCursor(0,0);
+    lcd.print("Voiture1:");
+    lcd.print(millis()/1000-4);
+  lcd.print(":");
+  lcd.println(dixieme % 100);
+    delay(1000);
+    lcd.clear();}
+    if(RXBuffer[2]== 34 && RXBuffer[3] == 200 && RXBuffer[4]== 39 && RXBuffer[5]==217 ){
+  digitalWrite(PB0, HIGH);
+  delay(10);
+  digitalWrite(PB0, LOW);
+  lcd.clear();
+    lcd.setCursor(0,1);
+    lcd.print("Voiture2:");
+     lcd.print(millis()/1000-4);
+  lcd.print(":");
+  lcd.println(dixieme % 100);
+    delay(1000);
+    lcd.clear();}
+
+  Serial.print("Tag réponse :");
+  Serial.println(RXBuffer[0],HEX);
+  Serial.print("Longueur :");
+  Serial.println(RXBuffer[1],HEX);
+   Serial.print("UID :");
+  Serial.print(RXBuffer[2],HEX);
+  Serial.print(RXBuffer[3],HEX);
+  Serial.print(RXBuffer[4],HEX);
+  Serial.print(RXBuffer[5],HEX);
+  Serial.print(RXBuffer[6],HEX);
+    Serial.print(RXBuffer[7],HEX);
+      Serial.print(RXBuffer[8],HEX);
+            Serial.print(RXBuffer[9],HEX);
+                  Serial.print(RXBuffer[10],HEX);
+                              Serial.print(RXBuffer[11],HEX);
+                                          Serial.print(RXBuffer[12],HEX);
+                                                      Serial.print(RXBuffer[13],HEX);
+                                                                  Serial.print(RXBuffer[14],HEX);
+                                                                   Serial.print(RXBuffer[15],HEX);
+                                                                    Serial.println(RXBuffer[16],HEX);
+
+                
+  delay(1);
+ 
+
+  }
+
+
+
+
+                
+  delay(1);
+ 
+
+  }
+
+
+            

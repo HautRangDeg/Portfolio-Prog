@@ -1,0 +1,87 @@
+
+
+/*TP effectué sur Arduino UNO ...en attendant d'avoir un ESP
+  L'objet du code est simple : faire agir un servomoteur selon les ordres donnés par le moniteur série.
+  Le servo devra réagir selon deux modes de videsse différents, de 0 à 180° (dans les deux sens).
+*/
+#include <ESP32Servo.h>//paraîtrait qu'il y aurait un cerveau dans la bande. Alors on intègre une librairie pour le gérer.
+
+//nommage des constantes connectiques :
+Servo servolent; //...ou rapide. On verra. Ici on vient de lui donner un nom.
+const int pinServo = 12; //pour pas qu'il s'envole, on définit la valeur du pin auquel on attache le servo (son entrée à modulation).
+
+//nommage des variables et constantes pour le code :
+int angle = 0; //l'angle "actuel" du bras armé de notre servo
+int ordreAngle=0;//l'angle voulu, qu'on définit de façon péremptoire pour le bras précité (après tout c'est pas lui le servo de la bande)
+
+void setup() {
+  Serial.begin(115200); //voyants Arduino au vert. Lancement du port série à 115200 bauds. Savez-vous d'où vient le mot "baud" ?
+  servolent.attach(pinServo);//l'est bien arrimé le garçon, alors on indique au microcontrôleur où il peut lui envoyer les dernières nouvelles.
+  servolent.write(0);//paraîtrait qu'il faut avoir le servo à 0 en début de programme.
+  Serial.println("Veuillez entrer le mot de passe");//invite de commande, au cas où notre petit servo serve à déverrouiller une machine infernale. Qui sinon vous occit.
+}
+
+void loop() {
+  //alors on danse...
+  if (Serial.available()) { //si tout est branché et que tout le monde est dispo pour faire passer le message
+
+
+    char commande= Serial.read();//on interroge les données de la console série et on définit avec "char" sa variable texte.
+    ordreAngle = Serial.parseInt();//avec parseInt, on extrait le nombre entier de commande envoyée dans la console série, qu'on stocke dans la variable ordreAngle.
+
+
+    //premier mode de vitesse (rapide)
+    if (commande == 'f') {//condition pour rentrer dans le mode vitesse rapide : que "f" fasse partie des caractères de la commande série
+      //un peu de texte :
+      Serial.print("Rapide : ");//ligne qui permet d'afficher le mode de vitesse dans lequel on est
+      Serial.println(ordreAngle);//permet de faire apparaître l'angle voulu envoyé par la console série
+
+      //la commande servo
+        //d'abord dans un sens
+      for (angle=servolent.read(); angle<=ordreAngle ; angle++) {//ici on détermine comment va réagir notre servo en fonction des informations reçues et celles existantes. Ici on définit que le bras garde la position du dernier ordre donné; puis que le bras du servo va se diriger vers l'angle voulu (en l'occurence si la position actuelle du bras du servo est inférieure à la position souhaitée). Enfin, on détermine grâce à l'incrémentation à quel pas l'axe du servo tourne (ici à un angle de 1 degré).
+        servolent.write(angle);//enfin notre servo va pouvoir aller chercher son nouvel angle.
+        delay(5);}//grâce à "for", notre servo agit en boucle jusqu'à l'angle souhaité. Ceci permet d'intégrer un délai entre chaque nouvelle boucle. On intègre donc ce délai ici, en fin de boucle.
+      
+       //même principe mais dans l'autre sens (cas où l'angle actuel du servo est supérieur à l'angle voulu).
+      for (angle=servolent.read();angle>=ordreAngle ; angle--){
+      servolent.write(angle);
+        delay(5);}
+    }
+
+    //second mode de vitesse définit par le caractère "s" (seule la vitesse change grâce au "delay")
+    if (commande == 's') {
+      Serial.print("Lent : ");
+      Serial.println(ordreAngle);
+      for (angle=servolent.read(); angle<=ordreAngle ; angle++) {
+        servolent.write(angle);
+        delay(15);}
+      for (angle=servolent.read();angle>=ordreAngle ; angle--){
+      servolent.write(angle);
+        delay(15);}
+      }
+    //pour éviter de s'énerver parce que ça ne marche pas :    
+    if (commande == 'S'||commande == 'F'){
+      Serial.println("en minuscule please");
+      }
+    //on aurait également pu intégrer "S" et "F" dans les possibilités de commande. Mais la consigne étant avec les minuscules....
+      
+
+/* Commentaire technique :
+ * Dans ce programme il pourrait y avoir autant de modes de vitesse que de caractères 
+ * ou de combinaisons de caractères différents. On pourrait même définir dans un même
+ * mode de vitesse, une vitesse aller, et une vitesse retour.
+ * 
+ * Commentaire général :
+ * Merci pour cet exercice très intéressant. Il m'a permis de découvrir la fonction "for" et son incrémentation.
+ * La difficulté pour moi a été d'abord de comprendre que le dysfonctionnement de mon programme venait d'une mauvaise maîtrise de cet outils.
+ * Une fois identifié, j'ai pu concrètement commencer à rectifier mon erreur. Elle venait du fait que je n'avais pas intégré deux variables
+ * au début de ma programmation (une variable pour la rotation et une variable pour la commande).
+ * 
+ * J'ai juste un bémol dans la rhétorique de la pédagogie du MOOC. Elle est un peu déroutante : beaucoup d'éléments sont "prémâchés" dans la consigne. C'est a priori pratique,
+ * surtout quand comme moi on n'a pas fait de programmation Arduino depuis longtemps, mais c'est un faux ami. Car on pense que ça va être facile, parce que la solution est donnée à 90%.
+ * Mais il reste les 10% qui forment la clé de voute. Il m'a donc fallu tout reprendre pour bien identifier d'où venait mon erreur.
+ */
+ }
+}
+
+ 

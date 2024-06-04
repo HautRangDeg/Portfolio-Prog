@@ -1,0 +1,8 @@
+div.VAP{display:flex; align-items:center;justify-content:center;background-color: white;box-shadow: 2px 2px 10px 20px white}
+p.VAP{font-family:Verdana, Geneva, Tahoma, sans-serif ;font-size: 1.7rem;font-weight:bold;text-align: center;vertical-align: middle;}
+p.VAP2{font-family:Verdana, Geneva, Tahoma, sans-serif ;font-size: 1.2rem;font-weight:bold;font-style:italic;text-align: center;vertical-align: middle;line-height:2rem}
+p.VAP2:hover{font-family:Verdana, Geneva, Tahoma, sans-serif ;font-size: 1.2rem;font-weight:bold;font-style:italic;text-align: center;vertical-align: middle;text-decoration: underline overline black;text-decoration-thickness: 0.1rem;line-height:2rem}
+a.VAP{text-decoration: none;color:black}
+p.VAP3{font-family:Verdana, Geneva, Tahoma, sans-serif ;font-size: 0.9rem;font-weight:bold;font-style:italic;text-align: center;vertical-align: middle;line-height:2rem}
+p.VAP3:hover{font-family:Verdana, Geneva, Tahoma, sans-serif ;font-size: 0.9rem;font-weight:bold;font-style:italic;text-align: center;vertical-align: middle;text-decoration: underline overline black;text-decoration-thickness: 0.1rem;}
+p.VAP4{font-family:Verdana, Geneva, Tahoma, sans-serif ;font-size: 1.2rem;font-weight:bold;font-style:italic;text-align: center;vertical-align: middle;line-height:2rem}

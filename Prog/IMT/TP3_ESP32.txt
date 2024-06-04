@@ -1,0 +1,42 @@
+/*TP n°3 du MOOC "Fabriquer un objet connecté"
+Rappel de la consigne : faire apparaître sur le port série, toutes les 10 secondes, la valeur d'une photorésistance alimentée en 3v.
+L'ESP32 doit se mettre en sommeil entre chaque relevé de données.
+Le revelé de données se fait grâce à un diviseur de tension branché en A2.
+Le moniteur série doit affichée la donnée formatée de façon suivante : {"pin":"A2", "ldr":<valeur_lue_photorésistance>}, pour permettre une exploitation future en Json (ou Jason s'il a retrouvé sa toison. Paraîtrait qu'elle vaut de l'or).
+ */
+
+//nommage des constantes
+const int pin = A2; //le pin de relevé de valeur analogique
+int valeur_lue_photoresistance = 0; //variable qui servira à stocker la valeur de la photorésistance
+
+//référentiel temporel (car ce qui n'est pas dit dans le MOOC, c'est que l'ESP32 du fabricant chinois Espressif System fonctionne en microseconde pour la fonction sommeil profond
+#define conV_S_en_uS 1000000  // conversion microsecondes vers secondes : 1s=1000000μs ; parce que c'est plus pratique de parler en secondes
+#define Temps_de_repos  10    // Cette constante sera couplée à la précédent pour demander à l'ESP32 de se réveiller toutes les 10 secondes (il peut cependant y avoir un léger décalage qui tient du réglage de l'horloge interne de l'ESP32)
+
+
+void setup() {
+  Serial.begin(115200);  // lancement de la communication série
+ 
+  esp_sleep_enable_timer_wakeup(Temps_de_repos * conV_S_en_uS);//="permettre le réveil de l'esp selon un timer" : commande propre à l'ESP32. Elle permet d'utiliser la fonction deep sleep (sommeil profond) de cette puce. Cependant l'ESP32 a bien des façons de se mettre et de sortir du deepsleep, par ici la doc : https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/sleep_modes.html?highlight=sleep%20mode
+    valeur_lue_photoresistance = analogRead(pin);              //après la commande précédente, il est possible d'intégrer les fonctions activables pendant la période de réveil. On aurait très bien pu placer ces lignes avant la ligne de commande esp_sleep_enable_timer_wakeup
+    Serial.println(" "); //parce qu'il est bon de respirer après la console de l'ESP qui s'affiche à chaque réveil
+    Serial.println(" "); //de respirer beaucoup
+    Serial.println("==== début de l'incrémentation pour Jayson ==="); //de mettre un peu de légende
+    Serial.println("{\"pin\":\"A2\", \"ldr\": " + String(valeur_lue_photoresistance)+"}"); //d'enfin faire apparaître ce qu'on nous demande vraiment dans ce TP.
+    Serial.println("=========  mise en sommeil pour " + String(Temps_de_repos) + "s  =========");//puis de préciser qu'on est reparti pour un tour
+    Serial.println(" "); //pour mieux se séparer de la console ESP (faciliter la lecture)
+    
+ esp_deep_sleep_start();//la mise en sommeil commence véritablement
+}
+
+void loop() { // on a déjà rempli la consigne. Rien de plus à mettre.
+}
+
+/*Commentaire :
+ * Dommage. Dommage ce Mooc où on ne transmet que du bout des lèvres (comme l'exemple du "\":" dont on expédie la question en te renvoyant vers une obscure page de la semaine précédente et qui fait tout l'objet de ce TP.
+ * Dommage aussi qu'on n'ait même pas à utiliser l'ESP32 sur le sujet principal de cette semaine : l'exploitation pair à pair en Bluetooth.
+ * Le contenu global des cours est pourtant très intéressant (personnellement j'apprends beaucoup), mais je reste cirsconspect par la teneure des TP (celui-ci et le premier).
+ * Merci d'avance d'avoir pris le temps de la correction.
+ * 
+
+ */
